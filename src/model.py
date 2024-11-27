@@ -34,3 +34,8 @@ class GetNoteInfoResponse(BaseModel):
 
 class GetNotesListResponse(BaseModel):
     notes_ids: Dict[int, int]
+
+
+class DeleteNoteResponse(BaseModel):
+    id: int
+    deleted_at: datetime
