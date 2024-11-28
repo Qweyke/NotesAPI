@@ -42,6 +42,7 @@ def get_note_text(note_id: int):
 
 @app_router.delete("/notes/{note_id}", response_model=model.DeleteNoteResponse)
 def delete_note(note_id: int):
+    notes_manager.delete_note(note_id)
     return model.DeleteNoteResponse(id=note_id, deleted_at=datetime.now())
 
 

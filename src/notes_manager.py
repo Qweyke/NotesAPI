@@ -76,12 +76,14 @@ class NotesManager:
         with open(note_path, "w") as note_file:
             json.dump(note_data, note_file)
 
-    def remove_note(self, note_id: int):
+    def delete_note(self, note_id: int):
         note_id_str = str(note_id)
         if note_id_str in self.__notes:
             os.remove(self.get_note_path(note_id))
             del self.__notes[note_id_str]
             self.__save_notes_list()
+        else:
+            raise fastapi.HTTPException(status_code=404, detail="Note not found")
 
     def get_notes_list(self) -> dict:
         return {index: int(note_id) for index, note_id in enumerate(self.__notes.keys())}
