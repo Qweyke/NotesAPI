@@ -74,7 +74,7 @@ class NotesManager:
         note_path = self.get_note_path(note_id)
 
         with open(note_path, "w") as note_file:
-            json.dump(note_data, note_file)
+            json.dump(note_data, note_file, default=self.datetime_serializer)
 
     def delete_note(self, note_id: int):
         note_id_str = str(note_id)
