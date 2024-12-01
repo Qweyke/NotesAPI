@@ -4,16 +4,17 @@ from datetime import datetime
 
 import fastapi
 
-PATH = "notes/manager.json"
+MANAGER_PATH = "notes/manager.json"
+NOTES_PATH = "../notes"
 
 
 class NotesManager:
     def __init__(self):
 
-        if not os.path.exists("notes"):
-            os.makedirs("notes")
+        if not os.path.exists(NOTES_PATH):
+            os.makedirs(NOTES_PATH)
 
-        self.__file_path = PATH
+        self.__file_path = MANAGER_PATH
         self.__notes = self.load_notes_list()
 
     @staticmethod
@@ -42,7 +43,7 @@ class NotesManager:
                 "id": note_id,
                 "text": text,
                 "created_at": datetime.now(),
-                "updated_at": datetime.now()
+                "updated_at": datetime.now(),
             }
 
             with open(note_path, "w") as note_file:
@@ -53,7 +54,9 @@ class NotesManager:
             self.__save_notes_list()
 
         else:
-            raise fastapi.HTTPException(status_code=400, detail=f"Note with ID:{note_id} already exists")
+            raise fastapi.HTTPException(
+                status_code=400, detail=f"Note with ID:{note_id} already exists"
+            )
 
     def get_note_path(self, note_id: int) -> str:
         note_id_str = str(note_id)
@@ -86,4 +89,6 @@ class NotesManager:
             raise fastapi.HTTPException(status_code=404, detail="Note not found")
 
     def get_notes_list(self) -> dict:
-        return {index: int(note_id) for index, note_id in enumerate(self.__notes.keys())}
+        return {
+            index: int(note_id) for index, note_id in enumerate(self.__notes.keys())
+        }
