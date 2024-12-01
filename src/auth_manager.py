@@ -9,7 +9,7 @@ from jose import jwt
 KEY = "MyKey1337"
 ALG = "HS256"
 
-USERS_PATH = "../users.json"
+USERS_PATH = "../server/users.json"
 
 
 class AuthorizationManager:
@@ -40,7 +40,7 @@ class AuthorizationManager:
         user = self.__users.get(name)
         if user:
             if user["password"] == password:
-                payload = {"iss": name, "exp": datetime.now() + timedelta(minutes=5)}
+                payload = {"iss": name, "exp": datetime.now() + timedelta(minutes=35)}
                 try:
                     return jwt.encode(payload, self.__secret, ALG)
                 except jwt.JWTError as ex:
@@ -51,8 +51,11 @@ class AuthorizationManager:
     def verify_jwt(self, request: Request):
         try:
             token = request.headers.get("Authorization")
-            token = token.replace('Bearer', '')
+            print(token)
+            token = token.replace('Bearer', '').strip()
+            print(token)
             payload = jwt.decode(token, self.__secret, ALG)
+            print(payload)
             user = self.__users.get(payload.get("iss"))
             if user:
                 return True

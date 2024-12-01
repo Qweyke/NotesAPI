@@ -4,8 +4,8 @@ from datetime import datetime
 
 import fastapi
 
-MANAGER_PATH = "notes/manager.json"
-NOTES_PATH = "../notes"
+MANAGER_PATH = "../server/manager.json"
+NOTES_PATH = "../server/notes"
 
 
 class NotesManager:
@@ -37,7 +37,7 @@ class NotesManager:
     def add_note(self, note_id: int, text: str):
 
         if str(note_id) not in self.__notes:
-            note_path = f"notes/note{note_id}.json"
+            note_path = f"{NOTES_PATH}/note{note_id}.json"
 
             note_data = {
                 "id": note_id,
