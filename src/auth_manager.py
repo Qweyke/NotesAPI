@@ -12,7 +12,7 @@ ALG = "HS256"
 USERS_PATH = "../users.json"
 
 
-class TokenManager:
+class AuthorizationManager:
 
     def __init__(self):
         self.__file_path = USERS_PATH
@@ -31,15 +31,22 @@ class TokenManager:
             json.dump(self.__users, file)
 
     def register_user(self, name: str, password: str):
+        if name in self.__users:
+            raise HTTPException(status_code=409, detail="User already exists")
         self.__users[name] = {"password": password}
+        self.__save_users()
 
     def generate_jwt(self, name: str, password: str) -> Optional[str]:
-
         user = self.__users.get(name)
-        if user and user["password"] == password:
-            payload = {"iss": name, "exp": datetime.now() + timedelta(minutes=5)}
-            return jwt.encode(payload, self.__secret, ALG)
-        return None
+        if user:
+            if user["password"] == password:
+                payload = {"iss": name, "exp": datetime.now() + timedelta(minutes=5)}
+                try:
+                    return jwt.encode(payload, self.__secret, ALG)
+                except jwt.JWTError as ex:
+                    raise HTTPException(status_code=500, detail=f"Something went wrong: {ex}")
+            raise HTTPException(status_code=401, detail="Wrong password")
+        raise HTTPException(status_code=404, detail="User not found")
 
     def verify_jwt(self, request: Request):
         try:

@@ -12,6 +12,26 @@ class CreateNote(BaseModel):
     text: Optional[str] = None
 
 
+class RegisterUserResponse(BaseModel):
+    info: str
+    name: Optional[str] = None
+
+
+class RegisterUser(BaseModel):
+    name: str
+    password: str
+
+
+class LogIn(BaseModel):
+    name: str
+    password: str
+
+
+class LogInResponse(BaseModel):
+    name: str
+    token: str
+
+
 class UpdateNoteText(BaseModel):
     text: Optional[str] = None
 
