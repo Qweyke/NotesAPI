@@ -50,18 +50,26 @@ class Server:
             raise HTTPException(status_code=401, detail="Wrong password")
         raise HTTPException(status_code=404, detail="User not found")
 
-    def __verify_jwt(self, bearer_token: str):
+    def __verify_jwt(self, bearer_token: str) -> dict:
         try:
             token = bearer_token.replace("Bearer", "").strip()
             payload = jwt.decode(token, KEY, ALG)
-            user = self.__manager_list.get(payload.get("iss"))
+            user = payload.get("iss")
             if user is not None:
                 return user
-            raise HTTPException(status_code=404, detail="User not found")
+            raise HTTPException(status_code=401, detail="Invalid token")
+        except Exception as ex:
+            raise HTTPException(status_code=401, detail=f"Invalid token: {ex}")
         except jwt.ExpiredSignatureError:
             raise HTTPException(status_code=401, detail="Expired token")
         except jwt.InvalidTokenError:
             raise HTTPException(status_code=401, detail="Invalid or missing token")
+
+    def __get_user_dict(self, bearer_token: str):
+        user_dict = self.__manager_list.get(self.__verify_jwt(bearer_token))
+        if user_dict is not None:
+            return user_dict
+        raise HTTPException(status_code=404, detail="User not found")
 
     @staticmethod
     def __datetime_serializer(obj) -> str:
@@ -69,10 +77,14 @@ class Server:
             return obj.isoformat()
         raise TypeError("Type not serializable for datetime")
 
-    def __get_note_path(self, token: str, note_id: int) -> str:
-        user = self.__verify_jwt(token)
-        note_path = f"{NOTES_PATH}/{user}/{note_id}.json"
-        if os.path.isfile(note_path):
+    def __get_note_path(self, bearer_token: str, note_id: int) -> str:
+        user_name = self.__verify_jwt(bearer_token)
+
+        note_path = f"{NOTES_PATH}/{user_name}/{note_id}.json"
+        if (
+                os.path.isfile(note_path)
+                and str(note_id) in self.__manager_list[user_name]["notes"]
+        ):
             return note_path
         raise fastapi.HTTPException(status_code=404, detail="Note not found")
 
@@ -81,12 +93,13 @@ class Server:
             raise HTTPException(status_code=409, detail="User already exists")
         self.__manager_list[name] = {"password": password, "notes": []}
         self.__save_manager_list()
-        if not os.path.exists(NOTES_PATH):
-            os.makedirs(NOTES_PATH)
+        if os.path.exists(NOTES_PATH):
+            os.makedirs(f"{NOTES_PATH}/{name}")
 
-    def add_note(self, token: str, note_id: int, text: str):
-        user = self.__verify_jwt(token)
-        if str(note_id) not in self.__manager_list.get(user, {}).get("notes", []):
+    def add_note(self, bearer_token: str, note_id: int, text: str):
+
+        notes_list = self.__get_user_dict(bearer_token).get("notes")
+        if str(note_id) not in notes_list:
             note_data = {
                 "id": note_id,
                 "text": text,
@@ -94,14 +107,18 @@ class Server:
                 "updated_at": datetime.now(),
             }
 
-            note_path = f"{NOTES_PATH}/{user}/{note_id}.json"
+            user_name = self.__verify_jwt(bearer_token)
+            note_path = f"{NOTES_PATH}/{user_name}/{note_id}.json"
             with open(note_path, "w") as note_file:
                 json.dump(note_data, note_file, default=self.__datetime_serializer)
+
+            self.__manager_list[user_name]["notes"].append(str(note_id))
             self.__save_manager_list()
 
-        raise fastapi.HTTPException(
-            status_code=400, detail=f"Note with ID:{note_id} already exists"
-        )
+        else:
+            raise fastapi.HTTPException(
+                status_code=400, detail=f"Note with ID:{note_id} already exists"
+            )
 
     def get_note_data(self, token: str, note_id: int) -> dict:
         note_path = self.__get_note_path(token, note_id)

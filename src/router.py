@@ -5,7 +5,6 @@ import model
 from src.server import Server
 
 server = Server()
-
 app_router = fastapi.APIRouter()
 
 
@@ -15,7 +14,7 @@ def register_user(request_body: model.RegisterUser):
     return model.RegisterUserResponse(info="Registered", name=request_body.name)
 
 
-@app_router.get("/users/auth", response_model=model.LogInResponse)
+@app_router.get("/users/authorize", response_model=model.LogInResponse)
 def log_in(request_body: model.LogIn):
     token = server.generate_jwt(request_body.name, request_body.password)
 
@@ -42,7 +41,7 @@ def patch_note(note_id: int, request_body: model.UpdateNoteText, request: Reques
     )
 
 
-@app_router.get("/notes/{note_id}/info", response_model=model.GetNoteInfoResponse)
+@app_router.get("/notes/info/{note_id}", response_model=model.GetNoteInfoResponse)
 def get_note_info(note_id: int, request: Request):
     note_data = server.get_note_data(request.headers.get("Authorization"), note_id)
 
@@ -51,7 +50,7 @@ def get_note_info(note_id: int, request: Request):
     )
 
 
-@app_router.get("/notes/{note_id}/text", response_model=model.GetNoteTextResponse)
+@app_router.get("/notes/text/{note_id}", response_model=model.GetNoteTextResponse)
 def get_note_text(note_id: int, request: Request):
     note_data = server.get_note_data(request.headers.get("Authorization"), note_id)
 
