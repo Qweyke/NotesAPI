@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 class CreateNoteResponse(BaseModel):
     id: int
+    name: str
 
 
 class CreateNote(BaseModel):
@@ -58,4 +59,4 @@ class GetNotesListResponse(BaseModel):
 
 class DeleteNoteResponse(BaseModel):
     id: int
-    deleted_at: datetime
+    name: str

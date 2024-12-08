@@ -50,7 +50,7 @@ class Server:
             raise HTTPException(status_code=401, detail="Wrong password")
         raise HTTPException(status_code=404, detail="User not found")
 
-    def __verify_jwt(self, bearer_token: str) -> dict:
+    def __verify_jwt(self, bearer_token: str) -> str:
         try:
             token = bearer_token.replace("Bearer", "").strip()
             payload = jwt.decode(token, KEY, ALG)
@@ -96,7 +96,7 @@ class Server:
         if os.path.exists(NOTES_PATH):
             os.makedirs(f"{NOTES_PATH}/{name}")
 
-    def add_note(self, bearer_token: str, note_id: int, text: str):
+    def add_note(self, bearer_token: str, note_id: int, text: str) -> Optional[str]:
 
         notes_list = self.__get_user_dict(bearer_token).get("notes")
         if str(note_id) not in notes_list:
@@ -114,6 +114,7 @@ class Server:
 
             self.__manager_list[user_name]["notes"].append(str(note_id))
             self.__save_manager_list()
+            return user_name
 
         else:
             raise fastapi.HTTPException(
@@ -142,16 +143,16 @@ class Server:
         note_path = self.__get_note_path(token, note_id)
         os.remove(note_path)
 
-        user = self.__verify_jwt(token)
-        if str(note_id) in self.__manager_list[user]["notes"]:
-            self.__manager_list[user]["notes"].remove(str(note_id))
+        user_name = self.__verify_jwt(token)
+        if str(note_id) in self.__manager_list[user_name]["notes"]:
+            self.__manager_list[user_name]["notes"].remove(str(note_id))
         else:
             raise HTTPException(
                 status_code=404, detail="Note ID not found in user's notes"
             )
 
         self.__save_manager_list()
-        return self.__datetime_serializer(datetime.now())
+        return user_name
 
     def get_notes_list(self, token: str) -> dict:
         user = self.__verify_jwt(token)

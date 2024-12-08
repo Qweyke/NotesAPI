@@ -23,8 +23,8 @@ def log_in(request_body: model.LogIn):
 
 @app_router.post("/notes/new/{note_id}", response_model=model.CreateNoteResponse)
 def create_note(note_id: int, request_body: model.CreateNote, request: Request):
-    server.add_note(request.headers.get("Authorization"), note_id, request_body.text)
-    return model.CreateNoteResponse(id=note_id)
+    user_name = server.add_note(request.headers.get("Authorization"), note_id, request_body.text)
+    return model.CreateNoteResponse(id=note_id, name=user_name)
 
 
 @app_router.patch(
@@ -59,8 +59,8 @@ def get_note_text(note_id: int, request: Request):
 
 @app_router.delete("/notes/delete/{note_id}", response_model=model.DeleteNoteResponse)
 def delete_note(note_id: int, request: Request):
-    time = server.delete_note(request.headers.get("Authorization"), note_id)
-    return model.DeleteNoteResponse(id=note_id, deleted_at=time)
+    user_name = server.delete_note(request.headers.get("Authorization"), note_id)
+    return model.DeleteNoteResponse(id=note_id, name=user_name)
 
 
 @app_router.get("/notes/list", response_model=model.GetNotesListResponse)
