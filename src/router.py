@@ -1,63 +1,69 @@
-from datetime import datetime
-from fastapi import HTTPException, Request
 import fastapi
+from fastapi import Request
 
-import model
-from src.notes_manager import NotesManager
+import models
+from src.server import Server
 
-notes_manager = NotesManager()
+server = Server()
 app_router = fastapi.APIRouter()
 
-TOKEN = "123"
 
-def verify_token(request: Request):
-    token = request.headers.get("Authorization")
-    if not token or token != f"Bearer {TOKEN}":
-        raise HTTPException(status_code=401, detail="Invalid or missing token")
-
-@app_router.post("/notes/{note_id}", response_model=model.CreateNoteResponse)
-def create_note(note_id: int, request_body: model.CreateNote, request: Request):
-    verify_token(request)
-    notes_manager.add_note(note_id, request_body.text)
-    return model.CreateNoteResponse(id=note_id)
+@app_router.post("/users/register", response_model=models.RegisterUserResponse)
+def register_user(request_body: models.RegisterUser):
+    server.register_user(request_body.name, request_body.password)
+    return models.RegisterUserResponse(info="Registered", name=request_body.name)
 
 
-@app_router.patch("/notes/{note_id}", response_model=model.UpdateNoteTextResponse)
-def create_note(note_id: int, request_body: model.UpdateNoteText, request: Request):
-    verify_token(request)
-    note_data = notes_manager.get_note_data(note_id)
-    note_data["text"] = request_body.text
-    note_data["updated_at"] = datetime.now()
+@app_router.get("/users/authorize", response_model=models.LogInResponse)
+def log_in(request_body: models.LogIn):
+    token = server.generate_jwt(request_body.name, request_body.password)
 
-    notes_manager.update_note_data(note_id, note_data)
-
-    return model.UpdateNoteTextResponse(id=note_data["id"], text=note_data["text"], updated_at=note_data["updated_at"])
+    return models.LogInResponse(name=request_body.name, token=token)
 
 
-@app_router.get("/notes/{note_id}/info", response_model=model.GetNoteInfoResponse)
+@app_router.post("/notes/new/{note_id}", response_model=models.CreateNoteResponse)
+def create_note(note_id: int, request_body: models.CreateNote, request: Request):
+    user_name = server.add_note(request.headers.get("Authorization"), note_id, request_body.text)
+    return models.CreateNoteResponse(id=note_id, name=user_name)
+
+
+@app_router.patch(
+    "/notes/update/{note_id}", response_model=models.UpdateNoteTextResponse
+)
+def patch_note(note_id: int, request_body: models.UpdateNoteText, request: Request):
+    user_name = server.update_note_data(
+        request.headers.get("Authorization"), note_id, request_body.text
+    )
+    return models.UpdateNoteTextResponse(
+        id=note_id,
+        name=user_name
+    )
+
+
+@app_router.get("/notes/info/{note_id}", response_model=models.GetNoteInfoResponse)
 def get_note_info(note_id: int, request: Request):
-    verify_token(request)
-    note_data = notes_manager.get_note_data(note_id)
+    note_data = server.get_note_data(request.headers.get("Authorization"), note_id)
 
-    return model.GetNoteInfoResponse(created_at=note_data["created_at"], updated_at=note_data["updated_at"])
+    return models.GetNoteInfoResponse(id=note_id,
+                                      created_at=note_data["created_at"], updated_at=note_data["updated_at"]
+                                      )
 
 
-@app_router.get("/notes/{note_id}/text", response_model=model.GetNoteTextResponse)
+@app_router.get("/notes/text/{note_id}", response_model=models.GetNoteTextResponse)
 def get_note_text(note_id: int, request: Request):
-    verify_token(request)
-    note_data = notes_manager.get_note_data(note_id)
+    note_data = server.get_note_data(request.headers.get("Authorization"), note_id)
 
-    return model.GetNoteTextResponse(id=note_data["id"], text=note_data["text"])
+    return models.GetNoteTextResponse(id=note_data["id"], text=note_data["text"])
 
 
-@app_router.delete("/notes/{note_id}", response_model=model.DeleteNoteResponse)
+@app_router.delete("/notes/delete/{note_id}", response_model=models.DeleteNoteResponse)
 def delete_note(note_id: int, request: Request):
-    verify_token(request)
-    notes_manager.delete_note(note_id)
-    return model.DeleteNoteResponse(id=note_id, deleted_at=datetime.now())
+    user_name = server.delete_note(request.headers.get("Authorization"), note_id)
+    return models.DeleteNoteResponse(id=note_id, name=user_name)
 
 
-@app_router.get("/notes/list", response_model=model.GetNotesListResponse)
+@app_router.get("/notes/list", response_model=models.GetNotesListResponse)
 def get_notes_list(request: Request):
-    verify_token(request)
-    return model.GetNotesListResponse(notes_ids=notes_manager.get_notes_list())
+    return models.GetNotesListResponse(
+        notes_ids=server.get_notes_list(request.headers.get("Authorization"))
+    )

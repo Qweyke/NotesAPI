@@ -6,10 +6,31 @@ from pydantic import BaseModel
 
 class CreateNoteResponse(BaseModel):
     id: int
+    name: str
 
 
 class CreateNote(BaseModel):
     text: Optional[str] = None
+
+
+class RegisterUserResponse(BaseModel):
+    info: str
+    name: Optional[str] = None
+
+
+class RegisterUser(BaseModel):
+    name: str
+    password: str
+
+
+class LogIn(BaseModel):
+    name: str
+    password: str
+
+
+class LogInResponse(BaseModel):
+    name: str
+    token: str
 
 
 class UpdateNoteText(BaseModel):
@@ -18,8 +39,7 @@ class UpdateNoteText(BaseModel):
 
 class UpdateNoteTextResponse(BaseModel):
     id: int
-    text: str
-    updated_at: datetime
+    name: str
 
 
 class GetNoteTextResponse(BaseModel):
@@ -28,6 +48,7 @@ class GetNoteTextResponse(BaseModel):
 
 
 class GetNoteInfoResponse(BaseModel):
+    id: int
     created_at: datetime
     updated_at: datetime
 
@@ -38,4 +59,4 @@ class GetNotesListResponse(BaseModel):
 
 class DeleteNoteResponse(BaseModel):
     id: int
-    deleted_at: datetime
+    name: str
