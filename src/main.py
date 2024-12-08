@@ -8,8 +8,6 @@ from uvicorn import Config, Server
 
 from src.router import app_router
 
-app = FastAPI()
-app.include_router(app_router)
 HOST = "127.0.0.1"
 PORT = 8080
 URL = f"http://{HOST}:{PORT}"
@@ -28,6 +26,8 @@ class Client:
 
     def __run_server(self):
         def init():
+            app = FastAPI()
+            app.include_router(app_router)
             config = Config(app=app, host=self.__host, port=self.__port, reload=True)
             self.__server = Server(config)
             self.__server.run()
