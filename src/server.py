@@ -129,7 +129,7 @@ class Server:
 
         return note_data
 
-    def update_note_data(self, token: str, note_id: int, text: str) -> dict:
+    def update_note_data(self, token: str, note_id: int, text: str) -> str:
         note_path = self.__get_note_path(token, note_id)
         note_data = self.get_note_data(token, note_id)
         note_data["text"] = text
@@ -137,7 +137,7 @@ class Server:
         with open(note_path, "w") as note_file:
             json.dump(note_data, note_file, default=self.__datetime_serializer)
 
-        return note_data
+        return self.__verify_jwt(token)
 
     def delete_note(self, token: str, note_id: int) -> str:
         note_path = self.__get_note_path(token, note_id)

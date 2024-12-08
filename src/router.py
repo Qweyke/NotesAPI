@@ -31,13 +31,12 @@ def create_note(note_id: int, request_body: model.CreateNote, request: Request):
     "/notes/update/{note_id}", response_model=model.UpdateNoteTextResponse
 )
 def patch_note(note_id: int, request_body: model.UpdateNoteText, request: Request):
-    updated_note = server.update_note_data(
+    user_name = server.update_note_data(
         request.headers.get("Authorization"), note_id, request_body.text
     )
     return model.UpdateNoteTextResponse(
-        id=updated_note["id"],
-        text=updated_note["text"],
-        updated_at=updated_note["updated_at"],
+        id=note_id,
+        name=user_name
     )
 
 
@@ -45,9 +44,9 @@ def patch_note(note_id: int, request_body: model.UpdateNoteText, request: Reques
 def get_note_info(note_id: int, request: Request):
     note_data = server.get_note_data(request.headers.get("Authorization"), note_id)
 
-    return model.GetNoteInfoResponse(
-        created_at=note_data["created_at"], updated_at=note_data["updated_at"]
-    )
+    return model.GetNoteInfoResponse(id=note_id,
+                                     created_at=note_data["created_at"], updated_at=note_data["updated_at"]
+                                     )
 
 
 @app_router.get("/notes/text/{note_id}", response_model=model.GetNoteTextResponse)

@@ -39,8 +39,7 @@ class UpdateNoteText(BaseModel):
 
 class UpdateNoteTextResponse(BaseModel):
     id: int
-    text: str
-    updated_at: datetime
+    name: str
 
 
 class GetNoteTextResponse(BaseModel):
@@ -49,6 +48,7 @@ class GetNoteTextResponse(BaseModel):
 
 
 class GetNoteInfoResponse(BaseModel):
+    id: int
     created_at: datetime
     updated_at: datetime
 
