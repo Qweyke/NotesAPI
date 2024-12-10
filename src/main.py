@@ -6,7 +6,7 @@ import requests
 from fastapi import FastAPI
 from uvicorn import Config, Server
 
-from src.router import app_router
+from router import app_router
 
 HOST = "127.0.0.1"
 PORT = 8080

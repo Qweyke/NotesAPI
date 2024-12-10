@@ -2,7 +2,7 @@ import fastapi
 from fastapi import Request
 
 import models
-from src.server import Server
+from server import Server
 
 server = Server()
 app_router = fastapi.APIRouter()

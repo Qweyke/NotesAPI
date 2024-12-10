@@ -7,8 +7,8 @@ import fastapi
 import jwt
 from fastapi import HTTPException
 
-MANAGER_PATH = "../server/user_manager.json"
-NOTES_PATH = "../server/notes"
+MANAGER_PATH = "/server/user_manager.json"
+NOTES_PATH = "/server/notes"
 
 KEY = "MyKey1337"
 ALG = "HS256"
